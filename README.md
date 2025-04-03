@@ -1,5 +1,31 @@
 [![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/big-data-europe/Lobby)
 
+# Descripción de los archivos:
+
+Loa archivos anteriores sirvieron para elaborar un ejercicio dentro del salón de clases:
+
+- Se clonó el repositorio de Docker-Hadoop desde GitHub y se descomprimió en una carpeta.
+
+- Se iniciaron los contenedores Docker con docker-compose up -d, lo que levantó un clúster de Hadoop con los servicios necesarios.
+
+- Se accedió al contenedor namenode, que es el nodo maestro de Hadoop, para administrar el sistema de archivos HDFS.
+
+- Se creó la estructura de carpetas en HDFS para alojar los archivos de entrada.
+
+- Se descargaron dos archivos:
+
+  - Un archivo .jar con un ejemplo de MapReduce.
+
+  - Un archivo .txt con el texto de Don Quijote de La Mancha.
+
+- Se copiaron estos archivos al contenedor namenode y se movió el archivo de texto a HDFS.
+
+- Se ejecutó un trabajo de MapReduce, utilizando el ejemplo de recuento de palabras (WordCount).
+
+Se visualizaron los resultados, accediendo a la carpeta de salida en HDFS y exportando el archivo con el recuento de palabras (quijote_wc.txt) a la carpeta del repositorio en la máquina local.
+
+Por último, se detuvieron los contenedores desde Docker Desktop.
+
 # Changes
 
 Version 2.0.0 introduces uses wait_for_it script for the cluster startup
