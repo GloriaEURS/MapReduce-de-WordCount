@@ -1,63 +1,73 @@
-[![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/big-data-europe/Lobby)
+# Ejemplos de MapReduce
 
-# Changes
+✅ Requisitos:
+- Docker instalado y funcionando.
+- Clonado el repositorio docker-hadoop.
+- Archivo hadoop-examples-0.20.205.0.jar descargado.
+- Archivo puzzle1.txt (el Sudoku a resolver) descargado.
 
-Version 2.0.0 introduces uses wait_for_it script for the cluster startup
+# Levantar el nodo de Hadoop
+Desde la carpeta donde clonaste el repositorio docker-hadoop, ejecuta:
+  `docker-compose up -d`
+Esto levantará los servicios de Hadoop, incluyendo el namenode.
 
-# Hadoop Docker
+# Ejecutar el MapReduce de la tarea 3 (Sudoku)
+1. Mover los archivos al contenedor
+   `docker cp hadoop-examples-0.20.205.0.jar namenode:/tmp`  
+   `docker cp puzzle1.txt namenode:/tmp`
+Asegúrate de que el nombre del archivo de texto sea puzzle1.txt.
 
-## Supported Hadoop Versions
-See repository branches for supported hadoop versions
+2. Ingresar al contenedor
+   `docker exec -it namenode bash`
 
-## Quick Start
+3. Ejecutar el script MapReduce
+  `cd /tmp`    
+  `hadoop jar hadoop-examples-0.20.205.0.jar sudoku puzzle1.txt`
 
-To deploy an example HDFS cluster, run:
-```
-  docker-compose up
-```
+Para guardar la salida en un archivo:
+  `hadoop jar hadoop-examples-0.20.205.0.jar sudoku puzzle1.txt > solucion_puzzle1.txt`
 
-Run example wordcount job:
-```
-  make wordcount
-```
+4. Salir del contenedor
+   `exit`
 
-Or deploy in swarm:
-```
-docker stack deploy -c docker-compose-v3.yml hadoop
-```
+5. Copiar la solución al host
+   `docker cp namenode:/tmp/solucion_puzzle1.txt .`
 
-`docker-compose` creates a docker network that can be found by running `docker network list`, e.g. `dockerhadoop_default`.
+# Ejecutar el MapReduce de la tarea 2 (Contar palabras de un libro) 
+En este caso estaba en otra computadora, donde tienen el libro "cronicas_de_una_muerte_anunciada.txt" entonces:
 
-Run `docker network inspect` on the network (e.g. `dockerhadoop_default`) to find the IP the hadoop interfaces are published on. Access these interfaces with the following URLs:
+1. Descargar y mover los archivos
+Descarga el archivo `.jar` desde Maven: 👉 `hadoop-mapreduce-examples-2.7.1-sources.jar`
 
-* Namenode: http://<dockerhadoop_IP_address>:9870/dfshealth.html#tab-overview
-* History server: http://<dockerhadoop_IP_address>:8188/applicationhistory
-* Datanode: http://<dockerhadoop_IP_address>:9864/
-* Nodemanager: http://<dockerhadoop_IP_address>:8042/node
-* Resource manager: http://<dockerhadoop_IP_address>:8088/
+Nos aseguramos de tener el archivo *Carroll, Lewis - Alicia En El País De Las Maravillas.txt* en la carpeta local.
 
-## Configure Environment Variables
+Mueve los archivos al contenedor: 
+* `docker cp hadoop-mapreduce-examples-2.7.1-sources.jar namenode:/tmp`
+* `docker cp Carroll, Lewis - Alicia En El País De Las Maravillas.txt namenode:/tmp`
 
-The configuration parameters can be specified in the hadoop.env file or as environmental variables for specific services (e.g. namenode, datanode etc.):
-```
-  CORE_CONF_fs_defaultFS=hdfs://namenode:8020
-```
+2. Ingresar al contenedor *namenode*
+ `docker exec -it namenode bash`
 
-CORE_CONF corresponds to core-site.xml. fs_defaultFS=hdfs://namenode:8020 will be transformed into:
-```
-  <property><name>fs.defaultFS</name><value>hdfs://namenode:8020</value></property>
-```
-To define dash inside a configuration parameter, use triple underscore, such as YARN_CONF_yarn_log___aggregation___enable=true (yarn-site.xml):
-```
-  <property><name>yarn.log-aggregation-enable</name><value>true</value></property>
-```
+3. Crear carpeta en HDFS y subir el archivo
+`hdfs dfs -mkdir /user/root/input_contador`  
+`cd /tmp`  
+`hdfs dfs -put cronicas_de_una_muerte_anunciada.txt /user/root/input_contador`
 
-The available configurations are:
-* /etc/hadoop/core-site.xml CORE_CONF
-* /etc/hadoop/hdfs-site.xml HDFS_CONF
-* /etc/hadoop/yarn-site.xml YARN_CONF
-* /etc/hadoop/httpfs-site.xml HTTPFS_CONF
-* /etc/hadoop/kms-site.xml KMS_CONF
-* /etc/hadoop/mapred-site.xml  MAPRED_CONF
+4. Ejecutar el programa *WordCount*
+`hadoop jar hadoop-mapreduce-examples-2.7.1-sources.jar org.apache.hadoop.examples.WordCount input_contador output_contador`
 
-If you need to extend some other configuration file, refer to base/entrypoint.sh bash script.
+5. Guardar el resultado a un archivo .txt
+`hdfs dfs -cat /user/root/output_contador/part-r-00000 > /tmp/cronicas_wc.txt`  
+`exit`  
+`docker cp namenode:/tmp/cronicas_wc.txt .`
+Ahora tienes el archivo con el conteo de palabras en tu carpeta base.
+
+🛑 Apagar el nodo de Hadoop: `docker-compose down`
+
+📂 Ver los resultados
+Abre el archivo `solucion_puzzle1.txt` (o el archivo correspondiente a otra tarea) con cualquier editor de texto para ver la solución generada por MapReduce.
+
+🔗 Referencias
+* [Documentacion de Apache para Dancing class](https://hadoop.apache.org/docs/stable/api/org/apache/hadoop/examples/dancing/package-summary.html)
+* [Archivos de Docker Hadoop](https://github.com/big-data-europe/docker-hadoop)
+* [Tutorial más detallado](https://miguelevangelista.gitbook.io/herramientasavanzadas/ejemplos-de-mapreduce/resolver-sudoku)
